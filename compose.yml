@@ -1,0 +1,77 @@
+# Launch SeaweedFS.
+#
+# See:
+#  * https://github.com/seaweedfs/seaweedfs/wiki/Getting-Started
+#  * https://github.com/seaweedfs/seaweedfs/blob/4.04/docker/seaweedfs-compose.yml
+
+x-seaweedfs-common-build: &seaweedfs-common-build
+  context: "./docker/seaweedfs/image/"
+
+services:
+
+  seaweedfs-playground-master:
+    build:
+      <<: *seaweedfs-common-build
+    ports:
+      - 9333:9333
+      - 19333:19333
+      - 9324:9324
+    command: 'master -ip=seaweedfs-playground-master -ip.bind=0.0.0.0 -metricsPort=9324'
+
+  seaweedfs-playground-volume:
+    build:
+      <<: *seaweedfs-common-build
+    ports:
+      - 8080:8080
+      - 18080:18080
+      - 9325:9325
+    command: 'volume -ip=seaweedfs-playground-volume -master="seaweedfs-playground-master:9333" -ip.bind=0.0.0.0 -port=8080 -metricsPort=9325'
+    depends_on:
+      - seaweedfs-playground-master
+
+  seaweedfs-playground-filer:
+    build:
+      <<: *seaweedfs-common-build
+    ports:
+      - 8888:8888
+      - 18888:18888
+      - 9326:9326
+    command: 'filer -ip=seaweedfs-playground-filer -master="seaweedfs-playground-master:9333" -ip.bind=0.0.0.0 -metricsPort=9326'
+    tty: true
+    stdin_open: true
+    depends_on:
+      - seaweedfs-playground-master
+      - seaweedfs-playground-volume
+
+  seaweedfs-playground-s3:
+    build:
+      <<: *seaweedfs-common-build
+    ports:
+      - 8333:8333
+      - 9327:9327
+    command: 's3 -filer="seaweedfs-playground-filer:8888" -ip.bind=0.0.0.0 -metricsPort=9327'
+    depends_on:
+      - seaweedfs-playground-master
+      - seaweedfs-playground-volume
+      - seaweedfs-playground-filer
+
+  seaweedfs-playground-webdav:
+    build:
+      <<: *seaweedfs-common-build
+    ports:
+      - 7333:7333
+    command: 'webdav -filer="seaweedfs-playground-filer:8888"'
+    depends_on:
+      - seaweedfs-playground-master
+      - seaweedfs-playground-volume
+      - seaweedfs-playground-filer
+
+#   seaweedfs-playground-prometheus:
+#     image: prom/prometheus:v2.21.0
+#     ports:
+#       - 9000:9090
+#     volumes:
+#       - ./prometheus:/etc/prometheus
+#     command: '--web.enable-lifecycle --config.file=/etc/prometheus/prometheus.yml'
+#     depends_on:
+#       - seaweedfs-playground-s3
