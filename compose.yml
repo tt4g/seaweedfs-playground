@@ -127,6 +127,27 @@ services:
     logging:
       <<: *seaweedfs-common-logging
 
+  # SeaweedFS Admin Component
+  # See: https://github.com/seaweedfs/seaweedfs/tree/4.04/weed/admin
+  seaweedfs-playground-admin:
+    build:
+      <<: *seaweedfs-common-build
+    ports:
+      - 23646:23646
+    command: >-
+      admin
+      -port=23646
+      -masters="seaweedfs-playground-master:9333"
+      -adminUser="${SEAWEEDFS_ADMIN_USER}"
+      -adminPassword="${SEAWEEDFS_ADMIN_PASSWORD}"
+    environment:
+      - SEAWEEDFS_ADMIN_USER=admin
+      - SEAWEEDFS_ADMIN_PASSWORD=admin
+    ulimits:
+      <<: *seaweedfs-common-ulimits
+    logging:
+      <<: *seaweedfs-common-logging
+
 #   seaweedfs-playground-prometheus:
 #     image: prom/prometheus:v2.21.0
 #     ports:
