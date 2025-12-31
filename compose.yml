@@ -7,6 +7,21 @@
 x-seaweedfs-common-build: &seaweedfs-common-build
   context: "./docker/seaweedfs/image/"
 
+x-seaweedfs-common-ulimits: &seaweedfs-common-ulimits
+  nproc: 65535
+  nofile:
+    soft: 65535
+    hard: 65535
+  memlock:
+    soft: -1
+    hard: -1
+
+x-seaweedfs-common-logging: &seaweedfs-common-logging
+  driver: "json-file"
+  options:
+    max-size: "1m"
+    max-file: 3
+
 services:
 
   seaweedfs-playground-master:
@@ -21,6 +36,10 @@ services:
       -ip=seaweedfs-playground-master
       -ip.bind=0.0.0.0
       -metricsPort=9324
+    ulimits:
+      <<: *seaweedfs-common-ulimits
+    logging:
+      <<: *seaweedfs-common-logging
 
   seaweedfs-playground-volume:
     build:
@@ -43,6 +62,10 @@ services:
         target: "/data"
     depends_on:
       - seaweedfs-playground-master
+    ulimits:
+      <<: *seaweedfs-common-ulimits
+    logging:
+      <<: *seaweedfs-common-logging
 
   seaweedfs-playground-filer:
     build:
@@ -62,6 +85,10 @@ services:
     depends_on:
       - seaweedfs-playground-master
       - seaweedfs-playground-volume
+    ulimits:
+      <<: *seaweedfs-common-ulimits
+    logging:
+      <<: *seaweedfs-common-logging
 
   seaweedfs-playground-s3:
     build:
@@ -78,6 +105,10 @@ services:
       - seaweedfs-playground-master
       - seaweedfs-playground-volume
       - seaweedfs-playground-filer
+    ulimits:
+      <<: *seaweedfs-common-ulimits
+    logging:
+      <<: *seaweedfs-common-logging
 
   seaweedfs-playground-webdav:
     build:
@@ -91,6 +122,10 @@ services:
       - seaweedfs-playground-master
       - seaweedfs-playground-volume
       - seaweedfs-playground-filer
+    ulimits:
+      <<: *seaweedfs-common-ulimits
+    logging:
+      <<: *seaweedfs-common-logging
 
 #   seaweedfs-playground-prometheus:
 #     image: prom/prometheus:v2.21.0
@@ -103,3 +138,7 @@ services:
 #       --config.file=/etc/prometheus/prometheus.yml
 #     depends_on:
 #       - seaweedfs-playground-s3
+#     ulimits:
+#       <<: *seaweedfs-common-ulimits
+#     logging:
+#       <<: *seaweedfs-common-logging
