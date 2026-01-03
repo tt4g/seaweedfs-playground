@@ -36,6 +36,11 @@ services:
       -ip=seaweedfs-playground-master
       -ip.bind=0.0.0.0
       -metricsPort=9324
+      -mdir=/tmp
+    volumes:
+      - type: "bind"
+        source: "./docker/seaweedfs/data/master/tmp"
+        target: "/tmp"
     ulimits:
       <<: *seaweedfs-common-ulimits
     logging:
