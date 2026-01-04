@@ -153,6 +153,54 @@ services:
     logging:
       <<: *seaweedfs-common-logging
 
+  # FUSE mount.
+  # See:
+  #  * https://github.com/seaweedfs/seaweedfs/wiki/FUSE-Mount
+  #  * https://github.com/seaweedfs/seaweedfs/wiki/Production-Setup#set-up-fuse-mount
+  #  * Appendix
+  #    * https://github.com/seaweedfs/seaweedfs/blob/4.05/seaweedfs-rdma-sidecar/docker-compose.mount-rdma.yml
+  #    * https://github.com/seaweedfs/seaweedfs/blob/4.05/seaweedfs-rdma-sidecar/WEED-MOUNT-CODE-PATH.md
+  #    * https://github.com/seaweedfs/seaweedfs/blob/4.05/seaweedfs-rdma-sidecar/CURRENT-STATUS.md
+  #    * https://github.com/seaweedfs/seaweedfs/blob/4.05/seaweedfs-rdma-sidecar/CORRECT-SIDECAR-APPROACH.md
+  #
+  # TIP: The following options are required for FUSE in Container:
+  #  * `--device /dev/fuse`
+  #  * `--cap-add SYS_ADMIN`
+  #  * `--security-opt apparmor:unconfined`
+  seaweedfs-playground-fuse-mount:
+    build:
+      context: "./docker/fuse-mount/image"
+    command: >-
+      weed mount
+      -filer=seaweedfs-playground-filer:8888
+      -filer.path="/"
+      -volumeServerAccess=direct
+      -cacheCapacityMB=4
+      -chunkSizeLimitMB=4
+      -dir=/mnt/seaweedfs-playground
+    devices:
+      - "/dev/fuse:/dev/fuse"
+    cap_add:
+      - "SYS_ADMIN"
+    security_opt:
+      - "apparmor:unconfined"
+    volumes:
+      - type: "volume"
+        source: "seaweedfs_mount"
+        target: "/mnt/seaweedfs-playground"
+    depends_on:
+      - seaweedfs-playground-filer
+    healthcheck:
+      test: ["CMD", "mountpoint", "-q", "/mnt/seaweedfs-playground"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+    ulimits:
+      <<: *seaweedfs-common-ulimits
+    logging:
+      <<: *seaweedfs-common-logging
+
 #   seaweedfs-playground-prometheus:
 #     image: prom/prometheus:v2.21.0
 #     ports:
@@ -168,3 +216,11 @@ services:
 #       <<: *seaweedfs-common-ulimits
 #     logging:
 #       <<: *seaweedfs-common-logging
+
+volumes:
+  seaweedfs_mount:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: size=1g
