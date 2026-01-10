@@ -132,7 +132,7 @@ services:
     logging:
       <<: *seaweedfs-common-logging
 
-  # SeaweedFS Admin Component
+  # SeaweedFS Admin Component.
   # See: https://github.com/seaweedfs/seaweedfs/tree/4.04/weed/admin
   seaweedfs-playground-admin:
     build:
@@ -148,6 +148,23 @@ services:
     environment:
       - SEAWEEDFS_ADMIN_USER=admin
       - SEAWEEDFS_ADMIN_PASSWORD=admin
+    ulimits:
+      <<: *seaweedfs-common-ulimits
+    logging:
+      <<: *seaweedfs-common-logging
+
+  # SeaweedFS Maintenance Worker.
+  # See: https://github.com/seaweedfs/seaweedfs/wiki/Worker
+  seaweedfs-playground-worker:
+    command: >-
+      worker
+      -admin="seaweedfs-playground-admin:23646"
+      -capabilities="vacuum,ec,remote,replication,balance"
+      -heartbeat=30s
+      -maxConcurrent=2 
+      -taskInterval=5s
+    build:
+      <<: *seaweedfs-common-build
     ulimits:
       <<: *seaweedfs-common-ulimits
     logging:
