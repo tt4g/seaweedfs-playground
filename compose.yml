@@ -72,6 +72,12 @@ services:
     logging:
       <<: *seaweedfs-common-logging
 
+  # Filer.
+  # See:
+  #  * Data Encryption (`-encryptVolumeData` option)
+  #    * https://github.com/seaweedfs/seaweedfs/wiki/Filer-Data-Encryption
+  #    * Enabling file encryption in an existing FILER, how to encrypt files that have already been created?:
+  #      https://github.com/seaweedfs/seaweedfs/discussions/5523
   seaweedfs-playground-filer:
     build:
       <<: *seaweedfs-common-build
@@ -85,6 +91,7 @@ services:
       -master="seaweedfs-playground-master:9333"
       -ip.bind=0.0.0.0
       -metricsPort=9326
+      -encryptVolumeData
     tty: true
     stdin_open: true
     depends_on:
