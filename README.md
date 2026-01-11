@@ -36,7 +36,7 @@ $ docker compose exec seaweedfs-playground-master weed shell
 ```shell
 # Put a new file.
 $ docker compose exec seaweedfs-playground-fuse-mount \
-    echo "Hello World" > /mnt/seaweedfs-playground/hello
+    bash -c 'echo "Hello World" > /mnt/seaweedfs-playground/hello'
 
 # List files.
 $ docker compose exec seaweedfs-playground-fuse-mount \
